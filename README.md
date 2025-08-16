@@ -22,7 +22,7 @@ Vee is a modern Flutter-based mobile app that brings space exploration to your f
 
 Clone the repository:
 
-git clone https://github.com/yourusername/v.git
+git clone https://github.com/Naomer/Vee.git
 
 
 Install dependencies:
