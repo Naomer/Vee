@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:provider/provider.dart';
 import 'features/home/presentation/screens/home_screen.dart';
@@ -19,6 +20,7 @@ void main() async {
   databaseFactory = databaseFactoryFfi;
 
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env"); 
   await setupAppIcon();
 
   // Get the application documents directory
