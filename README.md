@@ -21,9 +21,9 @@ Vee is a modern Flutter-based mobile app that brings space exploration to your f
 ## 🚀 Getting Started
 
 Clone the repository:
-
+```bash
 git clone https://github.com/Naomer/Vee.git
-
+```
 
 Install dependencies:
 
@@ -31,11 +31,11 @@ flutter pub get
 
 
 Create a .env file in the root directory with your API keys:
-
+```bash
 NASA_API_KEY=your_nasa_api_key_here
-
+```bash
 AI_API_KEY=your_ai_model_api_key_here
-
+```
 
 Run the app:
 
