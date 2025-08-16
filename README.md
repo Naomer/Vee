@@ -1,6 +1,6 @@
 # Vee – Space Exploration & AI App 🚀
 
-Vee is a modern Flutter-based mobile app that brings space exploration to your fingertips. It integrates various NASA APIs to provide stunning daily images, live ISS tracking, Mars rover photos, upcoming space missions, and more. On top of that, Vee features an AI-powered chatbot with voice-to-text support, allowing you to explore space knowledge in a conversational way.
+Vee is a modern Flutter-based mobile app that brings space exploration to your fingertips. It integrates various NASA APIs to provide stunning daily images, live ISS tracking, Mars rover photos, upcoming space missions, and more. On top of that, Vee features an AI-powered chatbot with voice-to-text support, allowing you to explore space knowledge in a text or conversational way.
 
 ## ✨ Features
 
