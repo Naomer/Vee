@@ -1,38 +1,57 @@
-# CosmosViewer
+#Vee – Space Exploration & AI App 🚀
 
-A modern space exploration app that provides access to various NASA APIs and features:
+Vee is a modern Flutter-based mobile app that brings space exploration to your fingertips. It integrates various NASA APIs to provide stunning daily images, live ISS tracking, Mars rover photos, upcoming space missions, and more. On top of that, Vee features an AI-powered chatbot with voice-to-text support, allowing you to explore space knowledge in a conversational way.
 
-- Astronomy Picture of the Day (APOD)
-- International Space Station (ISS) Tracker
-- Mars Rover Photos
-- Space Missions Information
+## ✨ Features
 
-## Features
+🪐 NASA APIs Integration – Astronomy Picture of the Day (APOD), Mars Rover Photos, missions, and other space data.
 
-- Beautiful, modern UI with Material Design 3
-- Dark mode support
-- Real-time ISS tracking
-- Daily space images and information
-- Mars rover photo gallery
-- Space missions database
+🌍 ISS Tracker – Follow the International Space Station in real time.
 
-## Getting Started
+🎨 Dark & Light Themes – Beautiful UI with Material Design 3 and seamless theme support.
 
-1. Clone the repository
-2. Run `flutter pub get` to install dependencies
-3. Create a `.env` file in the root directory with your NASA API key:
-   ```
-   NASA_API_KEY=your_api_key_here
-   ```
-4. Run the app with `flutter run`
+🎤 AI Chatbot – Voice-to-text interaction to explore space knowledge conversationally.
 
-## Dependencies
+🖼️ Daily Space Images & Info – Stay updated with astronomy content every day.
 
-- Flutter SDK
-- NASA APIs
-- Google Maps API
-- Various Flutter packages (see pubspec.yaml)
+📱 Modern Flutter UI – Clean, intuitive design.
 
-## Contributing
+🛰️ Space Missions Database – Browse upcoming and past missions.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 🚀 Getting Started
+
+Clone the repository:
+
+git clone https://github.com/yourusername/v.git
+
+
+Install dependencies:
+
+flutter pub get
+
+
+Create a .env file in the root directory with your API keys:
+
+NASA_API_KEY=your_nasa_api_key_here
+AI_API_KEY=your_ai_model_api_key_here
+
+
+Run the app:
+
+flutter run
+
+## 🛠️ Dependencies
+
+Flutter SDK
+
+NASA APIs
+
+AI Model API (for chatbot)
+
+Google Maps API
+
+Various Flutter packages (see pubspec.yaml)
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to submit a Pull Request.
