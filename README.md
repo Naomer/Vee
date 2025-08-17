@@ -50,8 +50,6 @@ NASA APIs
 
 AI Model API (for chatbot)
 
-Google Maps API
-
 Various Flutter packages (see pubspec.yaml)
 
 ## 🤝 Contributing
