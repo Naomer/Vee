@@ -38,7 +38,6 @@ NASA_API_KEY=your_nasa_api_key_here
 AI_API_KEY=your_ai_model_api_key_here
 ```
 
-
 Run the app:
 
 flutter run
