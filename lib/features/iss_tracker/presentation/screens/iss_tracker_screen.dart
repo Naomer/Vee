@@ -33,7 +33,7 @@ class _IssTrackerScreenState extends State<IssTrackerScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
     _updateIssLocation();
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    _timer = Timer.periodic(const Duration(minutes: 5), (timer) {
       _updateIssLocation();
     });
   }
@@ -84,16 +84,21 @@ class _IssTrackerScreenState extends State<IssTrackerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor:
+          isDark ? Colors.black : Theme.of(context).colorScheme.surface,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.8),
-              Theme.of(context).colorScheme.surface,
+              isDark
+                  ? Colors.black
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              isDark ? Colors.black : Theme.of(context).colorScheme.surface,
             ],
           ),
         ),
@@ -108,7 +113,7 @@ class _IssTrackerScreenState extends State<IssTrackerScreen>
             ),
             SafeArea(
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   // App Bar
                   SliverAppBar(
@@ -136,7 +141,7 @@ class _IssTrackerScreenState extends State<IssTrackerScreen>
                   ),
                   // Main Content
                   SliverPadding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,29 +180,38 @@ class _IssTrackerScreenState extends State<IssTrackerScreen>
   }
 
   Widget _buildPositionCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.2),
-            Colors.white.withOpacity(0.1),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: isDark ? Colors.white.withOpacity(0.12) : null,
+        gradient: isDark
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.2),
+                  Colors.white.withOpacity(0.1),
+                ],
+              ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(
+            sigmaX: isDark ? 0 : 10,
+            sigmaY: isDark ? 0 : 10,
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -272,29 +286,38 @@ class _IssTrackerScreenState extends State<IssTrackerScreen>
   }
 
   Widget _buildInfoCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.2),
-            Colors.white.withOpacity(0.1),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: isDark ? Colors.white.withOpacity(0.12) : null,
+        gradient: isDark
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.2),
+                  Colors.white.withOpacity(0.1),
+                ],
+              ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(
+            sigmaX: isDark ? 0 : 10,
+            sigmaY: isDark ? 0 : 10,
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(

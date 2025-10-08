@@ -15,81 +15,106 @@ import 'core/utils/setup_app_icon.dart';
 import 'dart:ui';
 
 void main() async {
-  // Initialize FFI for sqflite
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load(fileName: "assets/env/.env");
+    debugPrint(
+        "dotenv initialized: ${dotenv.isInitialized}, key present: ${dotenv.env['OPENROUTER_API_KEY'] != null}");
+  } catch (e) {
+    debugPrint("⚠️ Could not load .env file: $e");
+  }
+
+  await setupAppIcon();
+
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env"); 
-  await setupAppIcon();
-
-  // Get the application documents directory
   final appDir = await getApplicationDocumentsDirectory();
   final dbPath = join(appDir.path, 'vee.db');
-
-  // Set the database factory
   databaseFactory.setDatabasesPath(dbPath);
+
+  // Get system brightness immediately to avoid flicker
+  final systemBrightness =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness;
 
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
-      child: const MyApp(),
+      child: MyApp(initialBrightness: systemBrightness),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Brightness initialBrightness;
+
+  const MyApp({super.key, required this.initialBrightness});
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        // Determine the effective theme mode
+        ThemeMode effectiveThemeMode;
+        switch (themeProvider.themeMode) {
+          case AppThemeMode.light:
+            effectiveThemeMode = ThemeMode.light;
+            break;
+          case AppThemeMode.dark:
+            effectiveThemeMode = ThemeMode.dark;
+            break;
+          case AppThemeMode.system:
+            // Use the initial brightness to avoid flicker
+            effectiveThemeMode = initialBrightness == Brightness.dark
+                ? ThemeMode.dark
+                : ThemeMode.light;
+            break;
+        }
 
-    return MaterialApp(
-      title: 'Vee',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1E88E5),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        navigationBarTheme: NavigationBarThemeData(
-          height: 45,
-          labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
-            (Set<WidgetState> states) => const TextStyle(fontSize: 12.0),
-          ),
-          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-            (Set<WidgetState> states) => const IconThemeData(
-              size: 24,
+        return MaterialApp(
+          title: 'Vee',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1E88E5),
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+            navigationBarTheme: NavigationBarThemeData(
+              height: 45,
+              labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
+                (Set<WidgetState> states) => const TextStyle(fontSize: 12.0),
+              ),
+              iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+                (Set<WidgetState> states) => const IconThemeData(
+                  size: 24,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1E88E5),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        navigationBarTheme: NavigationBarThemeData(
-          height: 45,
-          labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
-            (Set<WidgetState> states) => const TextStyle(fontSize: 10.0),
-          ),
-          iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-            (Set<WidgetState> states) => const IconThemeData(
-              size: 24,
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1E88E5),
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+            navigationBarTheme: NavigationBarThemeData(
+              height: 45,
+              labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
+                (Set<WidgetState> states) => const TextStyle(fontSize: 10.0),
+              ),
+              iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+                (Set<WidgetState> states) => const IconThemeData(
+                  size: 24,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      themeMode: switch (themeProvider.themeMode) {
-        AppThemeMode.light => ThemeMode.light,
-        AppThemeMode.dark => ThemeMode.dark,
-        AppThemeMode.system => ThemeMode.system,
+          themeMode: effectiveThemeMode,
+          home: const MainScreen(),
+        );
       },
-      home: const MainScreen(),
     );
   }
 }
@@ -140,8 +165,10 @@ class _MainScreenState extends State<MainScreen> {
                                     : PhosphorIcons.house(
                                         PhosphorIconsStyle.regular),
                               ),
-                              onPressed: () =>
-                                  setState(() => _selectedIndex = 0),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() => _selectedIndex = 0);
+                              },
                             ),
                             IconButton(
                               icon: Icon(
@@ -151,19 +178,23 @@ class _MainScreenState extends State<MainScreen> {
                                     : PhosphorIcons.compass(
                                         PhosphorIconsStyle.regular),
                               ),
-                              onPressed: () =>
-                                  setState(() => _selectedIndex = 1),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() => _selectedIndex = 1);
+                              },
                             ),
                             IconButton(
                               icon: Icon(
                                 _selectedIndex == 2
-                                    ? PhosphorIcons.brain(
+                                    ? PhosphorIcons.sparkle(
                                         PhosphorIconsStyle.fill)
-                                    : PhosphorIcons.brain(
+                                    : PhosphorIcons.sparkle(
                                         PhosphorIconsStyle.regular),
                               ),
-                              onPressed: () =>
-                                  setState(() => _selectedIndex = 2),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() => _selectedIndex = 2);
+                              },
                             ),
                             IconButton(
                               icon: Icon(
@@ -173,8 +204,10 @@ class _MainScreenState extends State<MainScreen> {
                                     : PhosphorIcons.planet(
                                         PhosphorIconsStyle.regular),
                               ),
-                              onPressed: () =>
-                                  setState(() => _selectedIndex = 3),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() => _selectedIndex = 3);
+                              },
                             ),
                             IconButton(
                               icon: Icon(
@@ -184,8 +217,10 @@ class _MainScreenState extends State<MainScreen> {
                                     : PhosphorIcons.gear(
                                         PhosphorIconsStyle.regular),
                               ),
-                              onPressed: () =>
-                                  setState(() => _selectedIndex = 4),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() => _selectedIndex = 4);
+                              },
                             ),
                           ],
                         ),
@@ -229,8 +264,8 @@ class _MainScreenState extends State<MainScreen> {
                         IconButton(
                           icon: Icon(
                             _selectedIndex == 2
-                                ? PhosphorIcons.brain(PhosphorIconsStyle.fill)
-                                : PhosphorIcons.brain(
+                                ? PhosphorIcons.sparkle(PhosphorIconsStyle.fill)
+                                : PhosphorIcons.sparkle(
                                     PhosphorIconsStyle.regular),
                             color: Colors.black,
                           ),

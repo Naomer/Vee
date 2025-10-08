@@ -18,7 +18,7 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => ThemeProvider(),
-        child: const MyApp(),
+        child: const MyApp(initialBrightness: Brightness.light),
       ),
     );
 
@@ -32,8 +32,6 @@ void main() {
     expect(find.byIcon(PhosphorIcons.house(PhosphorIconsStyle.regular)),
         findsOneWidget);
     expect(find.byIcon(PhosphorIcons.compass(PhosphorIconsStyle.regular)),
-        findsOneWidget);
-    expect(find.byIcon(PhosphorIcons.brain(PhosphorIconsStyle.regular)),
         findsOneWidget);
     expect(find.byIcon(PhosphorIcons.planet(PhosphorIconsStyle.regular)),
         findsOneWidget);

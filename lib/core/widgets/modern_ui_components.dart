@@ -5,38 +5,68 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 class ModernAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
+  final Widget? leading;
   final bool centerTitle;
+  final bool pinned;
   final double height;
+  final double fontSize;
 
   const ModernAppBar({
     super.key,
     required this.title,
     this.actions,
+    this.leading,
     this.centerTitle = true,
+    this.pinned = false,
     this.height = kToolbarHeight,
+    this.fontSize = 28,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar(
-      floating: true,
+      pinned: pinned,
+      floating: !pinned,
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: centerTitle,
-      title: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+      leading: leading,
+      title: pinned
+          ? Text(
+              title,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
       actions: actions,
+      flexibleSpace: pinned
+          ? ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  color: isDark
+                      ? Colors.black.withOpacity(0.5)
+                      : Colors.white.withOpacity(0.1),
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -359,12 +389,14 @@ class ModernSegmentedControl extends StatelessWidget {
   final List<String> segments;
   final int selectedIndex;
   final ValueChanged<int> onChanged;
+  final double fontSize;
 
   const ModernSegmentedControl({
     super.key,
     required this.segments,
     required this.selectedIndex,
     required this.onChanged,
+    this.fontSize = 16,
   });
 
   @override
@@ -394,6 +426,7 @@ class ModernSegmentedControl extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
+                    fontSize: fontSize,
                     fontWeight: selectedIndex == index
                         ? FontWeight.bold
                         : FontWeight.normal,

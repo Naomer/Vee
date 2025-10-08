@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppThemeMode {
@@ -20,16 +21,26 @@ class ThemeProvider extends ChangeNotifier {
   AppThemeMode get themeMode => _themeMode;
 
   Future<void> _initialize() async {
-    _prefs = await SharedPreferences.getInstance();
-    final savedTheme = _prefs.getString(_themeKey);
-    if (savedTheme != null) {
-      _themeMode = AppThemeMode.values.firstWhere(
-        (mode) => mode.toString() == savedTheme,
-        orElse: () => AppThemeMode.system,
-      );
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      final savedTheme = _prefs.getString(_themeKey);
+      if (savedTheme != null) {
+        _themeMode = AppThemeMode.values.firstWhere(
+          (mode) => mode.toString() == savedTheme,
+          orElse: () => AppThemeMode.system,
+        );
+      }
+    } catch (e) {
+      // If SharedPreferences fails, keep system default
+      _themeMode = AppThemeMode.system;
     }
     _isInitialized = true;
     notifyListeners();
+  }
+
+  // Get the current system brightness immediately
+  Brightness get systemBrightness {
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness;
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
