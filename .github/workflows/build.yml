@@ -1,0 +1,32 @@
+name: Flutter iOS Build
+
+on:
+  push:
+    branches:
+      - main  # Or your branch name
+  workflow_dispatch:
+
+jobs:
+  build_ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS
+        run: flutter build ipa --release -t lib/main_prod.dart
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-ipa
+          path: build/ios/ipa
