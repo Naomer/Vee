@@ -1,4 +1,4 @@
-name: Flutter iOS Build
+name: Flutter iOS Unsigned Build
 
 on:
   push:
@@ -17,37 +17,23 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.6'
-          architecture: x64
+          flutter-version: '3.22.0'
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Decode and install certificate
-        env:
-          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE }}
-          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      - name: Build iOS (unsigned)
         run: |
-          echo "$CERTIFICATE_BASE64" | base64 --decode > certificate.p12
-          security create-keychain -p "" build.keychain
-          security import certificate.p12 -k build.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security list-keychains -s build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "" build.keychain
-          security set-keychain-settings
+          flutter build ios --no-codesign --release
 
-      - name: Install provisioning profile
-        env:
-          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+      - name: Zip IPA for download
         run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$PROFILE_BASE64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-
-      - name: Build iOS
-        run: flutter build ipa --release -t lib/main.dart
+          mkdir -p build/ios/ipa
+          cd build/ios/iphoneos
+          zip -r ../ipa/app_unsigned.zip .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-ipa
-          path: build/ios/ipa
+          name: ios-unsigned
+          path: build/ios/ipa/app_unsigned.zip
