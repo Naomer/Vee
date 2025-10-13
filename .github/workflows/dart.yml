@@ -47,4 +47,4 @@ jobs:
           tag_name: v${{ github.run_number }}
           files: build/ios/iphoneos/FlutterIpaExport.ipa
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
