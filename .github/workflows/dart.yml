@@ -3,40 +3,52 @@ name: iOS-ipa-build
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-ios:
     name: 🎉 iOS Build
     runs-on: macos-latest
+
     steps:
+      # 1️⃣ Checkout the repo
       - uses: actions/checkout@v3
 
+      # 2️⃣ Set up Flutter
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           architecture: x64
-      - run: flutter pub get
-      
 
+      # 3️⃣ Install dependencies
+      - run: flutter pub get
+
+      # 4️⃣ Update CocoaPods
       - run: pod repo update
         working-directory: ios
 
+      # 5️⃣ Build iOS app without code signing
       - run: flutter build ios --release --no-codesign
 
+      # 6️⃣ Prepare Payload folder for IPA
       - run: mkdir Payload
         working-directory: build/ios/iphoneos
 
-      - run: mv Runner.app/ Payload
+      - run: mv Runner.app Payload
         working-directory: build/ios/iphoneos
 
-      - name: Zip output
+      # 7️⃣ Zip into .ipa
+      - name: Create IPA
         run: zip -qq -r -9 FlutterIpaExport.ipa Payload
         working-directory: build/ios/iphoneos
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      # ✅ 8️⃣ Upload .ipa to GitHub Release (using a stable action)
+      - name: Upload IPA to Release
+        uses: ncipollo/release-action@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
-          tag: v1.0
-          overwrite: true
-          body: "This is first release"
+          tag: v${{ github.run_number }}
+          artifacts: build/ios/iphoneos/FlutterIpaExport.ipa
+          token: ${{ secrets.GH_PAT }}
+          allowUpdates: true
+          body: "Automated .ipa build for iOS (run #${{ github.run_number }})"
