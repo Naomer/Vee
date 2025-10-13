@@ -1,9 +1,8 @@
 # Vee – Space Exploration & AI App 🚀
 
-![Screenshot 1](https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/01.png)
-![Screenshot 2](https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/02.png)
-![Screenshot 3](https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/03.png)
-![Screenshot 4](https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/04.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/01.png" width="18%">
+
 
 Vee is a modern Flutter-based mobile app that brings space exploration to your fingertips. It integrates various NASA APIs to provide stunning daily images, live ISS tracking, Mars rover photos, upcoming space missions, and more. On top of that, Vee features an AI-powered chatbot with voice-to-text support, allowing you to explore space knowledge in a text or conversational way.
 
