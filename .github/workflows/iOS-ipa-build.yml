@@ -1,0 +1,82 @@
+name: iOS-ipa-build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-ios:
+    name: 🎉 iOS Build
+    runs-on: macos-latest
+
+    steps:
+      # 1️⃣ Checkout the repo
+      - uses: actions/checkout@v4
+
+      # 2️⃣ Set up Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+
+      # 3️⃣ Install dependencies
+      - run: flutter pub get
+
+      # 4️⃣ Update CocoaPods
+      - run: pod repo update
+        working-directory: ios
+
+      # 5️⃣ Clean previous builds
+      - run: flutter clean
+
+      # 6️⃣ Build iOS app without code signing for device
+      - run: flutter build ios --release --no-codesign
+
+      # 7️⃣ Create IPA manually without code signing
+      - name: Create IPA without code signing
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r -q FlutterIpaExport.ipa Payload
+          ls -la FlutterIpaExport.ipa
+
+      # 9️⃣ Verify IPA was created
+      - name: Verify IPA
+        run: |
+          cd build/ios/iphoneos
+          if [ -f FlutterIpaExport.ipa ]; then
+            echo "✅ IPA created successfully!"
+            ls -lh FlutterIpaExport.ipa
+          else
+            echo "❌ IPA creation failed!"
+            exit 1
+          fi
+
+      # ✅ Upload .ipa to GitHub Release
+      - name: Upload IPA to Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ github.run_number }}
+          artifacts: build/ios/iphoneos/FlutterIpaExport.ipa
+          token: ${{ secrets.GH_PAT }}
+          allowUpdates: true
+          body: |
+            🚀 Automated iOS Build (Run #${{ github.run_number }})
+            
+            **Build Details:**
+            - Flutter Channel: Stable
+            - Build Type: Release (No Code Signing)
+            - Target: iOS Device
+            
+            **Installation:**
+            - Download the .ipa file
+            - Install via Xcode, AltStore, or similar tools
+            - Note: This build is not code-signed for App Store distribution
+            
+            **Features:**
+            - AI Chat with speech recognition
+            - Space exploration tools
+            - Modern UI with dark/light themes

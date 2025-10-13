@@ -1,0 +1,112 @@
+name: iOS-ipa-build-fixed
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-ios:
+    name: 🎉 iOS IPA Build (Fixed)
+    runs-on: macos-latest
+
+    steps:
+      # 1️⃣ Checkout the repo
+      - uses: actions/checkout@v4
+
+      # 2️⃣ Set up Flutter
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+
+      # 3️⃣ Install dependencies
+      - run: flutter pub get
+
+      # 4️⃣ Update CocoaPods
+      - run: pod repo update
+        working-directory: ios
+
+      # 5️⃣ Clean previous builds
+      - run: flutter clean
+
+      # 6️⃣ Fix Xcode project settings to avoid code signing issues
+      - name: Fix Xcode Project Settings
+        run: |
+          cd ios
+          # Disable code signing in project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Manual/CODE_SIGN_STYLE = Automatic/g' Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = ""/g' Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = ""/g' Runner.xcodeproj/project.pbxproj
+          # Set to automatic signing
+          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = ""/g' Runner.xcodeproj/project.pbxproj
+          echo "✅ Xcode project settings fixed for no-code-signing build"
+
+      # 7️⃣ Build iOS app without code signing
+      - name: Build iOS App
+        run: flutter build ios --release --no-codesign
+
+      # 8️⃣ Create IPA file
+      - name: Create IPA File
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r -q FlutterIpaExport.ipa Payload
+          echo "✅ IPA created successfully!"
+          ls -lh FlutterIpaExport.ipa
+
+      # 9️⃣ Verify IPA was created
+      - name: Verify IPA
+        run: |
+          cd build/ios/iphoneos
+          if [ -f FlutterIpaExport.ipa ]; then
+            echo "✅ IPA file exists and is ready for download!"
+            file FlutterIpaExport.ipa
+            echo "File size: $(ls -lh FlutterIpaExport.ipa | awk '{print $5}')"
+          else
+            echo "❌ IPA creation failed!"
+            exit 1
+          fi
+
+      # ✅ Upload .ipa to GitHub Release
+      - name: Upload IPA to Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ github.run_number }}
+          artifacts: build/ios/iphoneos/FlutterIpaExport.ipa
+          token: ${{ secrets.GH_PAT }}
+          allowUpdates: true
+          body: |
+            🚀 iOS IPA Build (Run #${{ github.run_number }})
+            
+            **📱 Ready for iPhone Installation!**
+            
+            **Build Details:**
+            - Flutter Channel: Stable
+            - Build Type: Release IPA
+            - Code Signing: Disabled (No Apple Developer Account Required)
+            - Target: iPhone/iPad
+            
+            **📲 Installation Instructions:**
+            1. Download the FlutterIpaExport.ipa file
+            2. Install using one of these methods:
+               - **AltStore** (Recommended - Free)
+               - **Sideloadly** (Free)
+               - **3uTools** (Free)
+               - **Xcode** (If you have access to a Mac)
+            
+            **🔧 AltStore Installation (Easiest):**
+            1. Install AltStore on your iPhone
+            2. Download the IPA file
+            3. Open in AltStore and install
+            4. Trust the developer certificate in Settings > General > VPN & Device Management
+            
+            **✨ Features:**
+            - AI Chat with speech recognition
+            - Space exploration tools
+            - Modern UI with dark/light themes
+            - No code signing required!
+            
+            **⚠️ Note:** This IPA is not signed for App Store distribution but works perfectly for personal installation on your iPhone.
