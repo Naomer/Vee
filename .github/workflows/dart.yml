@@ -7,43 +7,55 @@ jobs:
   build-ios:
     name: 🎉 Build Unsigned iOS IPA
     runs-on: macos-latest
+
     steps:
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           architecture: x64
 
+      # 3️⃣ Install Flutter dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Ensure .env file exists
+      # 4️⃣ Generate .env file from secrets
+      - name: Generate .env file from secrets
         run: |
           mkdir -p assets/env
-          echo "API_URL=https://example.com" > assets/env/.env
+          echo "NASA_API_KEY=${{ secrets.NASA_API_KEY }}" > assets/env/.env
+          echo "OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}" >> assets/env/.env
 
+      # 5️⃣ Update CocoaPods
       - name: Update CocoaPods
         run: pod repo update
         working-directory: ios
 
+      # 6️⃣ Build iOS app (no codesign)
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
 
+      # 7️⃣ Create Payload folder
       - name: Create Payload folder
         run: mkdir -p Payload
         working-directory: build/ios/iphoneos
 
+      # 8️⃣ Move app into Payload
       - name: Move app into Payload
         run: mv Runner.app Payload/
         working-directory: build/ios/iphoneos
 
+      # 9️⃣ Package IPA
       - name: Package IPA
         run: zip -qq -r -9 VeeApp.ipa Payload
         working-directory: build/ios/iphoneos
 
+      # 🔟 Upload IPA artifact
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
