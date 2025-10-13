@@ -34,14 +34,8 @@ jobs:
       # 6️⃣ Fix Xcode project settings to avoid code signing issues
       - name: Fix Xcode Project Settings
         run: |
-          cd ios
-          # Disable code signing in project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Manual/CODE_SIGN_STYLE = Automatic/g' Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = ""/g' Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = .*/DEVELOPMENT_TEAM = ""/g' Runner.xcodeproj/project.pbxproj
-          # Set to automatic signing
-          sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = ""/g' Runner.xcodeproj/project.pbxproj
-          echo "✅ Xcode project settings fixed for no-code-signing build"
+          chmod +x scripts/fix_ios_codesigning.sh
+          ./scripts/fix_ios_codesigning.sh
 
       # 7️⃣ Build iOS app without code signing
       - name: Build iOS App
