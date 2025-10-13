@@ -2,9 +2,9 @@
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/01.png" width="25%">
-  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/02.png" width="23%">
-  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/03.png" width="20%">
-  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/04.png" width="23%">
+  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/02.png" width="25%">
+  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/03.png" width="25%">
+  <img src="https://raw.githubusercontent.com/Naomer/Vee/c29e727c92c566325ffac9fbbcb0ec08e7f176bf/04.png" width="25%">
 </p>
 
 
