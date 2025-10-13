@@ -36,6 +36,7 @@ class _AIChatScreenState extends State<AIChatScreen>
   String _modelSelection = 'auto';
   String? _activeModelId;
   bool _showScrollToBottom = false;
+  Timer? _scrollDebounceTimer;
   final List<Map<String, String>> _modelOptions = [
     {'label': 'Auto', 'id': 'auto'},
     {'label': 'Gemini 2.0 Flash', 'id': 'google/gemini-2.0-flash-001'},
@@ -79,6 +80,19 @@ class _AIChatScreenState extends State<AIChatScreen>
         messages[index]['isLiked'] = false;
       } else {
         messages[index]['isLiked'] = true;
+        messages[index]['isDisliked'] = false; // Remove dislike if liked
+      }
+    });
+  }
+
+  void _dislikeMessage(int index) {
+    // Toggle dislike status
+    setState(() {
+      if (messages[index]['isDisliked'] == true) {
+        messages[index]['isDisliked'] = false;
+      } else {
+        messages[index]['isDisliked'] = true;
+        messages[index]['isLiked'] = false; // Remove like if disliked
       }
     });
   }
@@ -177,17 +191,20 @@ class _AIChatScreenState extends State<AIChatScreen>
       _closeKeyboard();
     });
 
-    // Add scroll listener to track scroll position
+    // Add scroll listener to track scroll position with debouncing
     scrollController.addListener(() {
-      if (scrollController.hasClients) {
-        final isAtBottom = scrollController.position.pixels >=
-            scrollController.position.maxScrollExtent - 100;
-        if (_showScrollToBottom != !isAtBottom) {
-          setState(() {
-            _showScrollToBottom = !isAtBottom;
-          });
+      _scrollDebounceTimer?.cancel();
+      _scrollDebounceTimer = Timer(const Duration(milliseconds: 100), () {
+        if (scrollController.hasClients) {
+          final isAtBottom = scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent - 100;
+          if (_showScrollToBottom != !isAtBottom) {
+            setState(() {
+              _showScrollToBottom = !isAtBottom;
+            });
+          }
         }
-      }
+      });
     });
   }
 
@@ -279,6 +296,7 @@ class _AIChatScreenState extends State<AIChatScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _scrollDebounceTimer?.cancel();
     controller.dispose();
     inputFocusNode.dispose();
     scrollController.dispose();
@@ -305,7 +323,8 @@ class _AIChatScreenState extends State<AIChatScreen>
     FocusScope.of(context).unfocus();
     setState(() {
       messages.add({'text': text, 'isUser': true});
-      messages.add({'text': '', 'isUser': false, 'isLiked': false});
+      messages.add(
+          {'text': '', 'isUser': false, 'isLiked': false, 'isDisliked': false});
       _isStreaming = true;
       _currentStreamingResponse = '';
     });
@@ -392,7 +411,8 @@ class _AIChatScreenState extends State<AIChatScreen>
                 'text':
                     'Sorry, I encountered an error: ${error.toString()}. Please try again.',
                 'isUser': false,
-                'isLiked': false
+                'isLiked': false,
+                'isDisliked': false
               };
             }
           });
@@ -458,6 +478,7 @@ class _AIChatScreenState extends State<AIChatScreen>
   Widget buildMessage(Map<String, dynamic> msg, int index) {
     bool isUser = msg['isUser'];
     bool isLiked = msg['isLiked'] ?? false;
+    bool isDisliked = msg['isDisliked'] ?? false;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -477,17 +498,13 @@ class _AIChatScreenState extends State<AIChatScreen>
                         ? 29 * 8.0
                         : double.infinity, // 30 chars * ~8px per char
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: isUser ? 14 : 5, vertical: 12),
                   decoration: BoxDecoration(
                     color: isUser
-                        ? Colors.transparent
-                        : (isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.black.withOpacity(0.05)),
-                    borderRadius: BorderRadius.circular(20).copyWith(
-                      bottomRight: isUser ? Radius.zero : null,
-                    ),
+                        ? (isDark ? Colors.grey[900] : Colors.grey[200])
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(50),
                   ),
                   child: !isUser && msg['text'].isEmpty && _isStreaming
                       ? buildTypingIndicator()
@@ -506,107 +523,92 @@ class _AIChatScreenState extends State<AIChatScreen>
           ),
           // Action buttons for AI responses
           if (!isUser && msg['text'].isNotEmpty && !_isStreaming) ...[
-            //const SizedBox(height: 0),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Copy button
-                GestureDetector(
-                  onTap: () => _copyToClipboard(msg['text']),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        PhosphorIcon(
+            Padding(
+              padding: const EdgeInsets.only(left: 0, top: 0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Copy button
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _copyToClipboard(msg['text']),
+                    child: Transform.translate(
+                      offset: const Offset(0, -17),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        child: PhosphorIcon(
                           PhosphorIcons.copySimple(),
-                          size: 16,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          size: 14,
+                          color: isDark ? Colors.white : Colors.black87,
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                // Share button
-                GestureDetector(
-                  onTap: () => _shareText(msg['text']),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        PhosphorIcon(
-                          PhosphorIcons.share(),
-                          size: 16,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Like button
-                GestureDetector(
-                  onTap: () => _likeMessage(index),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        PhosphorIcon(
+                  const SizedBox(width: 1),
+                  // Like button
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _likeMessage(index),
+                    child: Transform.translate(
+                      offset: const Offset(0, -17),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        child: PhosphorIcon(
                           PhosphorIcons.thumbsUp(),
-                          size: 16,
+                          size: 14,
                           color: isLiked
-                              ? Colors.black
-                              : (isDark ? Colors.white70 : Colors.black54),
+                              ? Colors.blue
+                              : (isDark ? Colors.white : Colors.black),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                // Speak button
-                GestureDetector(
-                  onTap: () => _speakText(msg['text']),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.black.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: PhosphorIcon(
-                      _isSpeaking
-                          ? PhosphorIcons.stop()
-                          : PhosphorIcons.speakerHigh(),
-                      size: 16,
-                      color: _isSpeaking
-                          ? Colors.blue
-                          : (isDark ? Colors.white70 : Colors.black54),
+                  const SizedBox(width: 1),
+                  // Dislike button
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _dislikeMessage(index),
+                    child: Transform.translate(
+                      offset: const Offset(0, -17),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        child: PhosphorIcon(
+                          PhosphorIcons.thumbsDown(),
+                          size: 14,
+                          color: isDisliked
+                              ? Colors.red
+                              : (isDark ? Colors.white : Colors.black87),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 1),
+                  // Speak button
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _speakText(msg['text']),
+                    child: Transform.translate(
+                      offset: const Offset(0, -17),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        child: PhosphorIcon(
+                          _isSpeaking
+                              ? PhosphorIcons.stop()
+                              : PhosphorIcons.speakerHigh(),
+                          size: 14,
+                          color: _isSpeaking
+                              ? Colors.blue
+                              : (isDark ? Colors.white : Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],
@@ -668,7 +670,7 @@ class _AIChatScreenState extends State<AIChatScreen>
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
-                                          const SizedBox(width: 4),
+                                          const SizedBox(width: 2),
                                           const _CaretIcon(
                                             color: Colors.white,
                                             down: true,
@@ -744,7 +746,7 @@ class _AIChatScreenState extends State<AIChatScreen>
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: 2),
                                       const _CaretIcon(
                                         color: Colors.black,
                                         down: true,
@@ -872,7 +874,7 @@ class _AIChatScreenState extends State<AIChatScreen>
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 2),
                                 GestureDetector(
                                   onTap: () {
                                     if (_isStreaming) {
@@ -935,23 +937,16 @@ class _AIChatScreenState extends State<AIChatScreen>
                     child: GestureDetector(
                       onTap: _scrollToBottom,
                       child: Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 11, vertical: 11),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.1)
-                              : Colors.black.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.2)
-                                : Colors.black.withOpacity(0.1),
-                            width: 1,
-                          ),
+                          color: isDark ? Colors.grey[900] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(50),
                         ),
                         child: PhosphorIcon(
                           PhosphorIcons.caretDown(),
-                          size: 20,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          size: 16,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                     ),

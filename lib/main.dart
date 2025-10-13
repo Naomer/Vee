@@ -25,14 +25,22 @@ void main() async {
     debugPrint("⚠️ Could not load .env file: $e");
   }
 
-  await setupAppIcon();
+  try {
+    await setupAppIcon();
+  } catch (e) {
+    debugPrint("⚠️ Could not setup app icon: $e");
+  }
 
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  try {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
 
-  final appDir = await getApplicationDocumentsDirectory();
-  final dbPath = join(appDir.path, 'vee.db');
-  databaseFactory.setDatabasesPath(dbPath);
+    final appDir = await getApplicationDocumentsDirectory();
+    final dbPath = join(appDir.path, 'vee.db');
+    databaseFactory.setDatabasesPath(dbPath);
+  } catch (e) {
+    debugPrint("⚠️ Database initialization failed: $e");
+  }
 
   // Get system brightness immediately to avoid flicker
   final systemBrightness =
@@ -112,10 +120,75 @@ class MyApp extends StatelessWidget {
             ),
           ),
           themeMode: effectiveThemeMode,
-          home: const MainScreen(),
+          home: const AppInitializer(),
         );
       },
     );
+  }
+}
+
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // Add a small delay to ensure everything is ready
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.black
+            : Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                PhosphorIcons.sparkle(PhosphorIconsStyle.fill),
+                size: 64,
+                color: const Color(0xFF1E88E5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Vee',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1E88E5),
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E88E5)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const MainScreen();
   }
 }
 
